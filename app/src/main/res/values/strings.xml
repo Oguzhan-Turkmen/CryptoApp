@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">CryptoApp</string>
+    <string name="strRetry">Retry\n</string>
+    <string name="strFetchingDataFromServer">Fetching data...\n</string>
+</resources>
