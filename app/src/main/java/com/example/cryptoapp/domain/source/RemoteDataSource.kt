@@ -7,9 +7,19 @@ import kotlinx.coroutines.flow.Flow
 
 interface RemoteDataSource {
 
-    fun getAllCoins(tsym: String): Flow<PagingData<CoinResponse>>
-    suspend fun getCoinGraphDataHourly(fsym: String, tsym: String, aggregateId: Int): CoinGraphResponse
+    fun getAllCoins(currency: String): Flow<PagingData<CoinResponse>>
+    suspend fun getCoinGraphDataHourly(
+        currency: String,
+        coinName: String,
+        limit:Int,
+        aggregateId: Int
+    ): CoinGraphResponse
 
-    suspend fun getCoinGraphDataDaily(fsym: String, tsym: String, aggregateId: Int): CoinGraphResponse
+    suspend fun getCoinGraphDataDaily(
+        currency: String,
+        coinName: String,
+        limit:Int,
+        aggregateId: Int
+    ): CoinGraphResponse
 
 }

@@ -47,7 +47,7 @@ fun HomeScreen(
                         key = "coinUiModel",
                         value = it
                     )
-                    navController.navigate(MainScreens.CoinDetailScreen.route)
+                    navController.navigate(MainScreens.CoinDetailScreen.route+ it.name)
                 }
             )
         } else if (searchText.isNotEmpty()) {
@@ -65,7 +65,7 @@ fun HomeScreen(
                                 key = "coinUiModel",
                                 value = it
                             )
-                            navController.navigate(MainScreens.CoinDetailScreen.route)
+                            navController.navigate(MainScreens.CoinDetailScreen.route + it.name)
                         }
                     )
                 }
@@ -86,7 +86,7 @@ fun HomeScreen(
                                     key = "coinUiModel",
                                     value = it
                                 )
-                                navController.navigate(MainScreens.CoinDetailScreen.route)
+                                navController.navigate(MainScreens.CoinDetailScreen.route + it.name)
                             }
                         )
                     }

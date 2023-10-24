@@ -6,16 +6,18 @@ import com.example.cryptoapp.domain.model.CoinUiModel
 import kotlinx.coroutines.flow.Flow
 
 interface CoinRepository {
-    fun getAllCoins(tsym: String): Flow<PagingData<CoinUiModel>>
+    fun getAllCoins(currency: String): Flow<PagingData<CoinUiModel>>
     suspend fun getCoinGraphDataHourly(
-        tsym: String,
-        fsym: String,
+        currency: String,
+        coinName: String,
+        limit:Int,
         aggregateId: Int
     ): List<CoinGraphModel>
 
     suspend fun getCoinGraphDataDaily(
-        tsym: String,
-        fsym: String,
+        currency: String,
+        coinName: String,
+        limit:Int,
         aggregateId: Int
     ): List<CoinGraphModel>
 

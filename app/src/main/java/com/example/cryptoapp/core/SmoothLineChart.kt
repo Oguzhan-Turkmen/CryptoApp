@@ -1,8 +1,4 @@
-package com.example.cryptoapp.core
-
-import android.graphics.Paint
 import android.graphics.PointF
-import android.graphics.Typeface
 import android.util.Log
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
@@ -21,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +38,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextMeasurer
@@ -49,19 +46,19 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toIntRect
 import androidx.compose.ui.unit.toSize
 import com.example.cryptoapp.domain.model.CoinGraphModel
 import com.example.cryptoapp.ui.theme.AppColors
-import com.example.cryptoapp.util.withDecimalDigits
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalTextApi::class)
 @Composable
-fun SmoothLineGraph() {
+fun SmoothLineGraph(data: List<CoinGraphModel>) {
     Box(
         modifier = Modifier
             .padding(8.dp)
@@ -79,30 +76,36 @@ fun SmoothLineGraph() {
             }
         }
 
-        LaunchedEffect(key1 = fakeData, block = {
+        LaunchedEffect(key1 = data, block = {
             animationProgress.animateTo(1f, tween(3000))
+            Log.e("CHARTDATA", data.toString())
         })
 
         val coroutineScope = rememberCoroutineScope()
         val textMeasurer = rememberTextMeasurer()
         val labelTextStyle = MaterialTheme.typography.labelSmall
-        val density = LocalDensity.current
-        val spacing = 100f
-        val textPaint = remember(density) {
-            Paint().apply {
-                color = android.graphics.Color.BLACK
-                textAlign = Paint.Align.CENTER
-                textSize = density.run { 12.sp.toPx() }
-                typeface = Typeface.DEFAULT
+        var containerSize by remember { mutableStateOf(IntSize(350, 350)) }
+
+        val graphSize by remember(containerSize, data) {
+            derivedStateOf {
+                calculateGraphSizeByData(
+                    xIndicators = data.map { it.time.toString() },
+                    yIndicators = data.map { it.close.toString() },
+                    containerSize = containerSize,
+                    textMeasurer = textMeasurer
+                ).toSize()
             }
         }
 
         Spacer(
             modifier = Modifier
                 .padding(8.dp)
-                .aspectRatio(4/ 3f)
+                .aspectRatio(4 / 3f)
                 .fillMaxSize()
                 .align(Alignment.Center)
+                .onGloballyPositioned {
+                    containerSize = IntSize(it.size.width, it.size.height)
+                }
                 .pointerInput(Unit) {
                     detectTapGestures {
                         coroutineScope.launch {
@@ -114,71 +117,86 @@ fun SmoothLineGraph() {
                 .pointerInput(Unit) {
                     detectDragGesturesAfterLongPress(
                         onDragStart = { offset ->
-                            highlightedWeek =
-                                (offset.x / (size.width / (fakeData.size - 1))).roundToInt()
+                            highlightedWeek = (offset.x / (graphSize.width / (data.size - 1)))
+                                .roundToInt()
+                                .coerceIn(0, data.lastIndex)
                         },
                         onDragEnd = { highlightedWeek = null },
                         onDragCancel = { highlightedWeek = null },
                         onDrag = { change, _ ->
                             highlightedWeek =
-                                (change.position.x / (size.width / (fakeData.size - 1))).roundToInt()
+                                (change.position.x / (graphSize.width / (data.size - 1)))
+                                    .roundToInt()
+                                    .coerceIn(0, data.lastIndex)
                         }
                     )
                 }
                 .drawWithCache {
-                    val path = generateSmoothPath(fakeData, size)
+                    val path = generateSmoothPath(data, graphSize)
                     val filledPath = Path()
                     filledPath.addPath(path)
-                    filledPath.relativeLineTo(0f, size.height)
-                    filledPath.lineTo(0f, size.height)
+                    filledPath.relativeLineTo(0f, graphSize.height)
+                    filledPath.lineTo(0f, graphSize.height)
                     filledPath.close()
 
                     onDrawBehind {
                         val barWidthPx = 1.dp.toPx()
-                        drawRect(AppColors.Gray2, style = Stroke(barWidthPx))
 
-                        val verticalLines = 4
-                        val verticalSize = size.width / (verticalLines + 1)
-                        repeat(verticalLines) { i ->
-                            val startX = verticalSize * (i + 1)
+                        drawLine(
+                            AppColors.Gray2,
+                            start = Offset(0f, 0f),
+                            end = Offset(0f, graphSize.height),
+                            strokeWidth = barWidthPx
+                        )
+
+                        repeat(data.size) { i ->
+                            val startX = (graphSize.width / data.size) * (i + 1)
+
                             drawLine(
                                 AppColors.Gray2,
                                 start = Offset(startX, 0f),
-                                end = Offset(startX, size.height),
+                                end = Offset(startX, graphSize.height),
                                 strokeWidth = barWidthPx
                             )
+
                             drawText(
                                 textMeasurer = textMeasurer,
-                                text = fakeData[i].close
-                                    .withDecimalDigits(4)
-                                    .toString(),
+                                text = data[i].time.toString(),
                                 topLeft = Offset(
                                     startX,
-                                    size.height,
+                                    graphSize.height + 2f,
                                 )
                             )
                         }
-                        val horizontalLines = 3
-                        val sectionSize = size.height / (horizontalLines + 1)
-                        repeat(horizontalLines) { i ->
-                            val startY = sectionSize * (i + 1)
+
+                        drawLine(
+                            AppColors.Gray2,
+                            start = Offset(0f, graphSize.height),
+                            end = Offset(graphSize.width, graphSize.height),
+                            strokeWidth = barWidthPx
+                        )
+
+                        repeat(data.size) { i ->
+                            val startY = (graphSize.height / data.size) * i
+
                             drawLine(
                                 AppColors.Gray2,
                                 start = Offset(0f, startY),
-                                end = Offset(size.width, startY),
+                                end = Offset(graphSize.width, startY),
                                 strokeWidth = barWidthPx
                             )
+
                             drawText(
                                 textMeasurer = textMeasurer,
-                                text = fakeData[i].close.toString(),
-                                topLeft = Offset(size.width - 100f, startY),
+                                text = data[i].close.toString(),
+                                topLeft = Offset(graphSize.width, startY),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
 
                         // draw line
-                        clipRect(right = size.width * animationProgress.value) {
+                        clipRect(right = graphSize.width * animationProgress.value) {
                             drawPath(path, Color.Green, style = Stroke(2.dp.toPx()))
 
                             drawPath(
@@ -194,30 +212,69 @@ fun SmoothLineGraph() {
                         }
 
                         // draw highlight if user is dragging
-                        highlightedWeek?.let {
-                            this.drawHighlight(it, fakeData, textMeasurer, labelTextStyle)
+                        if (highlightedWeek != null) {
+                            drawHighlight(
+                                highlightedWeek!!,
+                                data,
+                                textMeasurer,
+                                labelTextStyle,
+                                graphSize
+                            )
                         }
-
                     }
                 })
     }
 }
 
-val PurpleBackgroundColor = Color(0xff322049)
-val BarColor = Color.White.copy(alpha = 0.3f)
+@OptIn(ExperimentalTextApi::class)
+private fun calculateGraphSizeByData(
+    xIndicators: List<String>,
+    yIndicators: List<String>,
+    containerSize: IntSize,
+    textMeasurer: TextMeasurer
+): IntSize {
+    if (xIndicators.isEmpty() || yIndicators.isEmpty()) {
+        val defaultSize = textMeasurer.measure(text = "").size
+
+        return IntSize(
+            width = containerSize.width - defaultSize.width,
+            height = containerSize.height - defaultSize.height
+        )
+    }
+
+    val tallestInXIndicators =
+        xIndicators.map { textMeasurer.measure(text = it).size.height }.maxBy { it }
+    val longestInYIndicators =
+        yIndicators.map { textMeasurer.measure(text = it).size.width }.maxBy { it }
+
+    return IntSize(
+        width = containerSize.width - longestInYIndicators,
+        height = containerSize.height - tallestInXIndicators
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewGraph() {
+    SmoothLineGraph(fakeData)
+}
+
 val HighlightColor = Color.White.copy(alpha = 0.7f)
 
 val fakeData = listOf(
-    CoinGraphModel(1694822400, 26569.1333333333),
-    CoinGraphModel(1694908800, 26534.66),
-    CoinGraphModel(1694995200, 26770.25),
-    CoinGraphModel(1695081600, 27218.95),
-    CoinGraphModel(1695168000, 27126.17),
-    CoinGraphModel(1695254400, 26567.99)
+    CoinGraphModel(1694822400, 26.13),
+    CoinGraphModel(1694908800, 26.66),
+    CoinGraphModel(1694995200, 26.25),
+    CoinGraphModel(1695081600, 27.95),
+    CoinGraphModel(1695168000, 27.17),
+    CoinGraphModel(1695254400, 26.99)
 )
 
 fun generateSmoothPath(data: List<CoinGraphModel>, size: Size): Path {
     val path = Path()
+
+    if (data.isEmpty()) return path
+
     val numberEntries = data.size - 1
     val weekWidth = size.width / numberEntries
 
@@ -260,19 +317,20 @@ fun DrawScope.drawHighlight(
     highlightedWeek: Int,
     graphData: List<CoinGraphModel>,
     textMeasurer: TextMeasurer,
-    labelTextStyle: TextStyle
+    labelTextStyle: TextStyle,
+    graphSize: Size
 ) {
     val amount = graphData[highlightedWeek].close
     val minAmount = graphData.minBy { it.close }.close
     val range = graphData.maxBy { it.close }.close - minAmount
     val percentageHeight = ((amount - minAmount).toFloat() / range.toFloat())
-    val pointY = size.height - (size.height * percentageHeight)
+    val pointY = graphSize.height - (graphSize.height * percentageHeight)
     // draw vertical line on week
-    val x = highlightedWeek * (size.width / (graphData.size - 1))
+    val x = highlightedWeek * (graphSize.width / (graphData.size - 1))
     drawLine(
         HighlightColor,
         start = Offset(x, 0f),
-        end = Offset(x, size.height),
+        end = Offset(x, graphSize.height),
         strokeWidth = 2.dp.toPx(),
         pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
     )
@@ -288,7 +346,7 @@ fun DrawScope.drawHighlight(
     val textLayoutResult = textMeasurer.measure("$amount", style = labelTextStyle)
     val highlightContainerSize = (textLayoutResult.size).toIntRect().inflate(4.dp.roundToPx()).size
     val boxTopLeft = (x - (highlightContainerSize.width / 2f))
-        .coerceIn(0f, size.width - highlightContainerSize.width)
+        .coerceIn(0f, graphSize.width - highlightContainerSize.width)
     drawRoundRect(
         Color.White,
         topLeft = Offset(boxTopLeft, 0f),

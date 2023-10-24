@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 
 class CoinsPagingSource(
     private val cryptoApi: CryptoApi,
-    private val tsym: String,
+    private val currency: String,
 ) : PagingSource<Int, CoinResponse>() {
     override fun getRefreshKey(state: PagingState<Int, CoinResponse>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
@@ -22,7 +22,7 @@ class CoinsPagingSource(
         return try {
             val page = params.key ?: 0
             val response = withContext(Dispatchers.IO) {
-                cryptoApi.getAllCoin(page = page, tsym = tsym)
+                cryptoApi.getAllCoin(page = page, currency = currency)
             }
 
             LoadResult.Page(

@@ -9,7 +9,6 @@ import com.example.cryptoapp.data.dto.coingraph.CoinGraphResponse
 import com.example.cryptoapp.data.repository.CoinsPagingSource
 import com.example.cryptoapp.domain.source.RemoteDataSource
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 
@@ -17,36 +16,40 @@ class RemoteDataSourceImpl @Inject constructor(
     private val cryptoApi: CryptoApi
 ) : RemoteDataSource {
     override fun getAllCoins(
-        tsym: String
+        currency: String
     ): Flow<PagingData<CoinResponse>> {
         return Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
             ),
-            pagingSourceFactory = { CoinsPagingSource(cryptoApi, tsym) }
+            pagingSourceFactory = { CoinsPagingSource(cryptoApi, currency) }
         ).flow
     }
 
     override suspend fun getCoinGraphDataHourly(
-        fsym: String,
-        tsym: String,
+        currency: String,
+        coinName: String,
+        limit: Int,
         aggregateId: Int
     ): CoinGraphResponse {
         return cryptoApi.getCoinGraphDataHourly(
-            fsym = fsym,
-            tsym = tsym,
+            coinName = coinName,
+            currency = currency,
+            limit = limit,
             aggregateId = aggregateId,
         )
     }
 
     override suspend fun getCoinGraphDataDaily(
-        fsym: String,
-        tsym: String,
+        currency: String,
+        coinName: String,
+        limit: Int,
         aggregateId: Int
     ): CoinGraphResponse {
         return cryptoApi.getCoinGraphDataDaily(
-            fsym = fsym,
-            tsym = tsym,
+            coinName = coinName,
+            currency = currency,
+            limit = limit,
             aggregateId = aggregateId,
         )
     }

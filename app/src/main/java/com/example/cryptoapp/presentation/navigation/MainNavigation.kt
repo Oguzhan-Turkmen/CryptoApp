@@ -2,8 +2,10 @@ package com.example.cryptoapp.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.cryptoapp.domain.model.CoinUiModel
 import com.example.cryptoapp.presentation.coindetail.CoinDetailScreen
 import com.example.cryptoapp.presentation.favorite.FavoriteScreen
@@ -32,7 +34,8 @@ fun MainNavigation(navController: NavHostController) {
             SettingsScreen(navController = navController)
         }
         composable(
-            route = MainScreens.CoinDetailScreen.route
+            route = MainScreens.CoinDetailScreen.route + "{coinName}",
+            arguments = listOf(navArgument("coinName") { type = NavType.StringType })
         ) {
             val coinUiModel =
                 navController.previousBackStackEntry?.savedStateHandle?.get<CoinUiModel>("coinUiModel")

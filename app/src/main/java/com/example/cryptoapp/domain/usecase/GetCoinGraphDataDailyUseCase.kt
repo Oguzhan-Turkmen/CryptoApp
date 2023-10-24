@@ -8,13 +8,15 @@ class GetCoinGraphDataDailyUseCase @Inject constructor(
     private val coinRepository: CoinRepository
 ) {
     suspend fun execute(
-        tsym: String = "USD",
-        fsym: String,
+        currency: String = "USD",
+        coinName: String,
+        limit: Int,
         aggregateId: Int
     ): List<CoinGraphModel> {
         return coinRepository.getCoinGraphDataDaily(
-            tsym = tsym,
-            fsym = fsym,
+            currency = currency,
+            coinName = coinName,
+            limit = limit,
             aggregateId = aggregateId
         )
     }

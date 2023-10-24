@@ -1,6 +1,7 @@
 package com.example.cryptoapp.presentation.coindetail.coindetailcomponent
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.cryptoapp.R
+import com.example.cryptoapp.presentation.coindetail.ChartHistoryRange
 import com.example.cryptoapp.ui.theme.AppColors
 import com.example.cryptoapp.ui.theme.customTypographyBold
 import com.example.cryptoapp.ui.theme.customTypogrphyRegular
@@ -102,6 +104,8 @@ fun CoinChangePctText(
 @Composable
 fun CoinDetailChartDataRangeRow(
     modifier: Modifier,
+    preferredRange: ChartHistoryRange,
+    onclick: (ChartHistoryRange) -> Unit
 ) {
     Row(
         modifier = modifier
@@ -109,26 +113,34 @@ fun CoinDetailChartDataRangeRow(
             .padding(start = 24.dp, end = 24.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        rangeModel.forEach {
-            CoinDetailChartDataRangeText(it.rangeName)
+        ChartHistoryRange.values().forEach() {
+            CoinDetailChartDataRangeText(
+                it.rangeName,
+                preferredRange = preferredRange,
+                onclick = { onclick.invoke(it) })
         }
     }
 }
 
 @Composable
-fun CoinDetailChartDataRangeText(rangeText: String) {
-    Box (
+fun CoinDetailChartDataRangeText(
+    rangeText: String,
+    preferredRange: ChartHistoryRange,
+    onclick: () -> Unit
+) {
+    Box(
         modifier = Modifier
-            .width(28.dp)
-            .height(20.dp)
+            .width(32.dp)
+            .height(24.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color.White),
+            .background(if (preferredRange.rangeName == rangeText) AppColors.Blue else Color.White)
+            .clickable(onClick = onclick),
         contentAlignment = Alignment.Center
-    ){
+    ) {
         Text(
             text = rangeText,
             style = MaterialTheme.customTypographyBold.caption2,
-            color = AppColors.Black
+            color = if (preferredRange.rangeName == rangeText) Color.White else AppColors.Black
         )
     }
 }
@@ -136,7 +148,11 @@ fun CoinDetailChartDataRangeText(rangeText: String) {
 @Preview
 @Composable
 fun CoinDetailChartDataRangeRowPrev() {
-    CoinDetailChartDataRangeRow(modifier = Modifier)
+    CoinDetailChartDataRangeRow(
+        modifier = Modifier,
+        preferredRange = ChartHistoryRange.ONE_DAY,
+        onclick = {}
+    )
 }
 
 @Preview

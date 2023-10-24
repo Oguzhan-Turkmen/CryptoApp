@@ -11,22 +11,22 @@ interface CryptoApi {
     @GET(ALL_COIN_PATH)
     suspend fun getAllCoin(
         @Query("page") page: Int,
-        @Query("tsym") tsym: String,
+        @Query("tsym") currency: String,
         @Query("api_key") apiKey: String = API_KEY
     ): CoinListResponse
 
     @GET(COIN_GRAPH_DATA_HOURLY)
     suspend fun getCoinGraphDataHourly(
-        @Query("fsym") fsym: String,
-        @Query("tsym") tsym: String,
+        @Query("fsym") coinName: String,
+        @Query("tsym") currency: String,
         @Query("limit") limit: Int = 30,
         @Query("aggregate") aggregateId: Int
     ): CoinGraphResponse
 
     @GET(COIN_GRAPH_DATA_DAILY)
     suspend fun getCoinGraphDataDaily(
-        @Query("fsym") fsym: String,
-        @Query("tsym") tsym: String,
+        @Query("fsym") coinName: String,
+        @Query("tsym") currency: String,
         @Query("limit") limit: Int = 24,
         @Query("aggregate") aggregateId: Int
     ): CoinGraphResponse

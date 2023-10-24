@@ -10,7 +10,7 @@ import javax.inject.Inject
 class GetCoinListUseCase @Inject constructor(
     private val coinRepository: CoinRepository
 ) {
-    fun execute(tsym: String = "USD"): Flow<PagingData<CoinUiModel>> {
-        return coinRepository.getAllCoins(tsym)
+    fun execute(currency: String = "USD"): Flow<PagingData<CoinUiModel>> {
+        return coinRepository.getAllCoins(currency)
     }
 }

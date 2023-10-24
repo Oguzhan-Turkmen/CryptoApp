@@ -1,6 +1,6 @@
 package com.example.cryptoapp.domain.model
 
 data class CoinGraphModel(
-    val time: Int,
+    var time: Int,
     val close: Double,
 )

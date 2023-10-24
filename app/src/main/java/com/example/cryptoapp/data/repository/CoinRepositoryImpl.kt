@@ -8,15 +8,18 @@ import com.example.cryptoapp.domain.repository.CoinRepository
 import com.example.cryptoapp.domain.source.RemoteDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class CoinRepositoryImpl @Inject constructor(
     private val remoteDataSource: RemoteDataSource,
 ) : CoinRepository {
     override fun getAllCoins(
-        tsym: String
+        currency: String
     ): Flow<PagingData<CoinUiModel>> =
-        remoteDataSource.getAllCoins(tsym = tsym).map { pagingData ->
+        remoteDataSource.getAllCoins(currency = currency).map { pagingData ->
             pagingData.map {
                 CoinUiModel(
                     id = it.coinInfo.id,
@@ -33,13 +36,15 @@ class CoinRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getCoinGraphDataHourly(
-        tsym: String,
-        fsym: String,
+        currency: String,
+        coinName: String,
+        limit:Int,
         aggregateId: Int
     ): List<CoinGraphModel> {
         val result = remoteDataSource.getCoinGraphDataHourly(
-            fsym = fsym,
-            tsym = tsym,
+            coinName = coinName,
+            currency = currency,
+            limit = limit,
             aggregateId = aggregateId,
         )
         return result.coinData.data.map {
@@ -51,13 +56,15 @@ class CoinRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCoinGraphDataDaily(
-        tsym: String,
-        fsym: String,
+        currency: String,
+        coinName: String,
+        limit:Int,
         aggregateId: Int
     ): List<CoinGraphModel> {
         val result = remoteDataSource.getCoinGraphDataDaily(
-            fsym = fsym,
-            tsym = tsym,
+            coinName = coinName,
+            currency = currency,
+            limit = limit,
             aggregateId = aggregateId,
         )
         return result.coinData.data.map {
@@ -67,4 +74,14 @@ class CoinRepositoryImpl @Inject constructor(
             )
         }
     }
+
+    private fun getHour(epochTimeSec: Long): String {
+        val localDateTime =
+            Instant.ofEpochMilli(epochTimeSec).atZone(ZoneId.systemDefault()).toLocalDateTime()
+
+        val formatter = DateTimeFormatter.ofPattern("hh:mm:ss a")
+
+        return localDateTime.format(formatter)
+    }
+
 }
