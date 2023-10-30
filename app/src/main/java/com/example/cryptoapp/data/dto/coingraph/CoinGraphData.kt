@@ -17,7 +17,7 @@ data class CoinGraphData(
     @SerializedName("open")
     val open: Double,
     @SerializedName("time")
-    val time: Int,
+    val time: Long,
     @SerializedName("volumefrom")
     val volumefrom: Double,
     @SerializedName("volumeto")

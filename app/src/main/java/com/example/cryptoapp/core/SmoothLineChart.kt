@@ -46,19 +46,23 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toIntRect
 import androidx.compose.ui.unit.toSize
 import com.example.cryptoapp.domain.model.CoinGraphModel
+import com.example.cryptoapp.presentation.coindetail.ChartHistoryRange
 import com.example.cryptoapp.ui.theme.AppColors
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalTextApi::class)
 @Composable
-fun SmoothLineGraph(data: List<CoinGraphModel>) {
+fun SmoothLineGraph(data: List<CoinGraphModel>, range: ChartHistoryRange) {
     Box(
         modifier = Modifier
             .padding(8.dp)
@@ -106,7 +110,7 @@ fun SmoothLineGraph(data: List<CoinGraphModel>) {
                 .onGloballyPositioned {
                     containerSize = IntSize(it.size.width, it.size.height)
                 }
-                .pointerInput(Unit) {
+                .pointerInput(data) {
                     detectTapGestures {
                         coroutineScope.launch {
                             animationProgress.snapTo(0f)
@@ -114,7 +118,7 @@ fun SmoothLineGraph(data: List<CoinGraphModel>) {
                         }
                     }
                 }
-                .pointerInput(Unit) {
+                .pointerInput(data) {
                     detectDragGesturesAfterLongPress(
                         onDragStart = { offset ->
                             highlightedWeek = (offset.x / (graphSize.width / (data.size - 1)))
@@ -142,32 +146,35 @@ fun SmoothLineGraph(data: List<CoinGraphModel>) {
                     onDrawBehind {
                         val barWidthPx = 1.dp.toPx()
 
+                        if (data.size >= range.limit) {
+                            val rangedData = range.getRangedData(data)
+
+                            repeat(range.xSteps) { i ->
+                                val startX = (graphSize.width / range.xSteps) * (i)
+                                Log.e("index", i.toString())
+                                drawLine(
+                                    AppColors.Gray2,
+                                    start = Offset(startX, 0f),
+                                    end = Offset(startX, graphSize.height),
+                                    strokeWidth = barWidthPx
+                                )
+
+                                drawText(
+                                    textMeasurer = textMeasurer,
+                                    text = range.getEpochMillisLabel(rangedData[i].time),
+                                    topLeft = Offset(
+                                        startX,
+                                        graphSize.height + 2f,
+                                    )
+                                )
+                            }
+                        }
                         drawLine(
                             AppColors.Gray2,
                             start = Offset(0f, 0f),
                             end = Offset(0f, graphSize.height),
                             strokeWidth = barWidthPx
                         )
-
-                        repeat(data.size) { i ->
-                            val startX = (graphSize.width / data.size) * (i + 1)
-
-                            drawLine(
-                                AppColors.Gray2,
-                                start = Offset(startX, 0f),
-                                end = Offset(startX, graphSize.height),
-                                strokeWidth = barWidthPx
-                            )
-
-                            drawText(
-                                textMeasurer = textMeasurer,
-                                text = data[i].time.toString(),
-                                topLeft = Offset(
-                                    startX,
-                                    graphSize.height + 2f,
-                                )
-                            )
-                        }
 
                         drawLine(
                             AppColors.Gray2,
@@ -176,34 +183,38 @@ fun SmoothLineGraph(data: List<CoinGraphModel>) {
                             strokeWidth = barWidthPx
                         )
 
-                        repeat(data.size) { i ->
-                            val startY = (graphSize.height / data.size) * i
+                        if (data.size >= range.limit) {
+                            val sortedData = data.sortedByDescending { it.close }
 
-                            drawLine(
-                                AppColors.Gray2,
-                                start = Offset(0f, startY),
-                                end = Offset(graphSize.width, startY),
-                                strokeWidth = barWidthPx
-                            )
+                            repeat(range.xSteps) { i ->
+                                val startY = (graphSize.height / range.xSteps) * i
+                                val itemIndex = (sortedData.size * i) / range.xSteps
 
-                            drawText(
-                                textMeasurer = textMeasurer,
-                                text = data[i].close.toString(),
-                                topLeft = Offset(graphSize.width, startY),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                                drawLine(
+                                    AppColors.Gray2,
+                                    start = Offset(0f, startY),
+                                    end = Offset(graphSize.width, startY),
+                                    strokeWidth = barWidthPx
+                                )
+
+                                drawText(
+                                    textMeasurer = textMeasurer,
+                                    text = sortedData[itemIndex].close.toString(),
+                                    topLeft = Offset(graphSize.width, startY),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
 
-                        // draw line
                         clipRect(right = graphSize.width * animationProgress.value) {
-                            drawPath(path, Color.Green, style = Stroke(2.dp.toPx()))
+                            drawPath(path, AppColors.SelectedBlue, style = Stroke(2.dp.toPx()))
 
                             drawPath(
                                 filledPath,
                                 brush = Brush.verticalGradient(
                                     listOf(
-                                        Color.Green.copy(alpha = 0.4f),
+                                        AppColors.SelectedBlue.copy(alpha = 0.4f),
                                         Color.Transparent
                                     )
                                 ),
@@ -223,6 +234,43 @@ fun SmoothLineGraph(data: List<CoinGraphModel>) {
                         }
                     }
                 })
+    }
+}
+
+private val ChartHistoryRange.xSteps: Int
+    get() {
+        return when (this) {
+            ChartHistoryRange.ONE_DAY -> 4
+            ChartHistoryRange.ONE_WEEK -> 7
+            ChartHistoryRange.ONE_MONTH -> 5
+            ChartHistoryRange.THREE_MONTH -> 4
+            ChartHistoryRange.SIX_MONTH -> 7
+            ChartHistoryRange.ONE_YEAR -> 6
+            ChartHistoryRange.ALL -> 5
+        }
+    }
+
+private fun ChartHistoryRange.getRangedData(data: List<CoinGraphModel>): List<CoinGraphModel> {
+    return when (this) {
+        ChartHistoryRange.ONE_DAY -> data.slice(0..limit step 6)
+        ChartHistoryRange.ONE_WEEK -> data
+        ChartHistoryRange.ONE_MONTH -> data.slice(0..limit step 7)
+        ChartHistoryRange.THREE_MONTH -> data.slice(0..limit step 30)
+        ChartHistoryRange.SIX_MONTH -> data.slice(0..limit step 30)
+        ChartHistoryRange.ONE_YEAR -> data.slice(0..limit step 60)
+        ChartHistoryRange.ALL -> data.slice(0..limit step 365)
+    }
+}
+
+private fun ChartHistoryRange.getEpochMillisLabel(epochTimeMillis: Long): String {
+    return when (this) {
+        ChartHistoryRange.ONE_DAY -> getHour(epochTimeMillis)
+        ChartHistoryRange.ONE_WEEK -> getDay(epochTimeMillis)
+        ChartHistoryRange.ONE_MONTH -> getDay(epochTimeMillis)
+        ChartHistoryRange.THREE_MONTH -> getMonth(epochTimeMillis)
+        ChartHistoryRange.SIX_MONTH -> getMonth(epochTimeMillis)
+        ChartHistoryRange.ONE_YEAR -> getMonth(epochTimeMillis)
+        ChartHistoryRange.ALL -> getYear(epochTimeMillis)
     }
 }
 
@@ -253,22 +301,8 @@ private fun calculateGraphSizeByData(
     )
 }
 
-@Preview
-@Composable
-private fun PreviewGraph() {
-    SmoothLineGraph(fakeData)
-}
-
 val HighlightColor = Color.White.copy(alpha = 0.7f)
 
-val fakeData = listOf(
-    CoinGraphModel(1694822400, 26.13),
-    CoinGraphModel(1694908800, 26.66),
-    CoinGraphModel(1694995200, 26.25),
-    CoinGraphModel(1695081600, 27.95),
-    CoinGraphModel(1695168000, 27.17),
-    CoinGraphModel(1695254400, 26.99)
-)
 
 fun generateSmoothPath(data: List<CoinGraphModel>, size: Size): Path {
     val path = Path()
@@ -292,7 +326,6 @@ fun generateSmoothPath(data: List<CoinGraphModel>, size: Size): Path {
                 size.height - (balance.close - min.close).toFloat() *
                         heightPxPerAmount
             )
-
         }
 
         val balanceX = i * weekWidth
@@ -337,7 +370,7 @@ fun DrawScope.drawHighlight(
 
     // draw hit circle on graph
     drawCircle(
-        Color.Green,
+        AppColors.SelectedBlue,
         radius = 4.dp.toPx(),
         center = Offset(x, pointY)
     )
@@ -358,4 +391,40 @@ fun DrawScope.drawHighlight(
         color = Color.Black,
         topLeft = Offset(boxTopLeft + 4.dp.toPx(), 4.dp.toPx())
     )
+}
+
+private fun getHour(epochTimeSec: Long): String {
+    val localDateTime =
+        LocalDateTime.ofInstant(Instant.ofEpochSecond(epochTimeSec), ZoneId.systemDefault())
+
+    val formatter = DateTimeFormatter.ofPattern("hh a")
+
+    return localDateTime.format(formatter)
+}
+
+private fun getMonth(epochTimeMillis: Long): String {
+    val localDateTime =
+        LocalDateTime.ofInstant(Instant.ofEpochSecond(epochTimeMillis), ZoneId.systemDefault())
+
+    val formatter = DateTimeFormatter.ofPattern("MMM")
+
+    return localDateTime.format(formatter)
+}
+
+private fun getYear(epochTimeMillis: Long): String {
+    val localDateTime =
+        LocalDateTime.ofInstant(Instant.ofEpochSecond(epochTimeMillis), ZoneId.systemDefault())
+
+    val formatter = DateTimeFormatter.ofPattern("YYYY")
+
+    return localDateTime.format(formatter)
+}
+
+private fun getDay(epochTimeSec: Long): String {
+    val localDateTime =
+        LocalDateTime.ofInstant(Instant.ofEpochSecond(epochTimeSec), ZoneId.systemDefault())
+
+    val formatter = DateTimeFormatter.ofPattern("dd")
+
+    return localDateTime.format(formatter)
 }

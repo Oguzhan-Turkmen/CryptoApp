@@ -73,13 +73,15 @@ fun CoinDetail(
             preferredRange = preferredRange,
             onclick = onClick
         )
-        CoinChart(chartData = chartData)
+        CoinChart(chartData = chartData, preferredRange = preferredRange)
     }
 
 }
 
 @Composable
-fun CoinChart(chartData: List<CoinGraphModel>) {
+fun CoinChart(
+    chartData: List<CoinGraphModel>, preferredRange: ChartHistoryRange,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -88,7 +90,7 @@ fun CoinChart(chartData: List<CoinGraphModel>) {
         contentAlignment = Alignment.Center
 
     ) {
-        SmoothLineGraph(chartData)
+        SmoothLineGraph(chartData, preferredRange)
     }
 }
 

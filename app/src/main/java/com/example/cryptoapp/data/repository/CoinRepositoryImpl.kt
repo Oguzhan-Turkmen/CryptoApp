@@ -6,11 +6,9 @@ import com.example.cryptoapp.domain.model.CoinGraphModel
 import com.example.cryptoapp.domain.model.CoinUiModel
 import com.example.cryptoapp.domain.repository.CoinRepository
 import com.example.cryptoapp.domain.source.RemoteDataSource
+import com.example.cryptoapp.presentation.coindetail.ChartHistoryRange
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class CoinRepositoryImpl @Inject constructor(
@@ -38,50 +36,31 @@ class CoinRepositoryImpl @Inject constructor(
     override suspend fun getCoinGraphDataHourly(
         currency: String,
         coinName: String,
-        limit:Int,
+        limit: Int,
         aggregateId: Int
     ): List<CoinGraphModel> {
-        val result = remoteDataSource.getCoinGraphDataHourly(
+        return remoteDataSource.getCoinGraphDataHourly(
             coinName = coinName,
             currency = currency,
             limit = limit,
             aggregateId = aggregateId,
-        )
-        return result.coinData.data.map {
-            CoinGraphModel(
-                time = it.time,
-                close = it.close
-            )
-        }
+        ).coinData.data.map { CoinGraphModel(time = it.time, close = it.close) }
     }
 
     override suspend fun getCoinGraphDataDaily(
         currency: String,
         coinName: String,
-        limit:Int,
+        limit: Int,
+        chartHistoryRange: ChartHistoryRange,
         aggregateId: Int
     ): List<CoinGraphModel> {
-        val result = remoteDataSource.getCoinGraphDataDaily(
+        return remoteDataSource.getCoinGraphDataDaily(
             coinName = coinName,
             currency = currency,
             limit = limit,
             aggregateId = aggregateId,
-        )
-        return result.coinData.data.map {
-            CoinGraphModel(
-                time = it.time,
-                close = it.close
-            )
-        }
+        ).coinData.data.map { CoinGraphModel(time = it.time, close = it.close) }
     }
 
-    private fun getHour(epochTimeSec: Long): String {
-        val localDateTime =
-            Instant.ofEpochMilli(epochTimeSec).atZone(ZoneId.systemDefault()).toLocalDateTime()
-
-        val formatter = DateTimeFormatter.ofPattern("hh:mm:ss a")
-
-        return localDateTime.format(formatter)
-    }
 
 }

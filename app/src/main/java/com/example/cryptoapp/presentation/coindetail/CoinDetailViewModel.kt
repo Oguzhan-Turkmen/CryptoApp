@@ -12,10 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,12 +39,18 @@ class CoinDetailViewModel @Inject constructor(
         }
     }
 
-    private fun getCoinGraphDataDaily(coinName: String, limit: Int, aggregateId: Int) {
+    private fun getCoinGraphDataDaily(
+        coinName: String,
+        limit: Int,
+        aggregateId: Int,
+        chartHistoryRange: ChartHistoryRange
+    ) {
         viewModelScope.launch {
             _coinGraphData.value =
                 getCoinGraphDataDailyUseCase.execute(
                     coinName = coinName,
                     limit = limit,
+                    chartHistoryRange = chartHistoryRange,
                     aggregateId = aggregateId
                 )
         }
@@ -57,7 +59,6 @@ class CoinDetailViewModel @Inject constructor(
     fun onDateRangeClick(chartHistoryRange: ChartHistoryRange) {
         _preferredRange.value = chartHistoryRange
     }
-
 
     fun fetchRequestedRangeData() {
         viewModelScope.launch {
@@ -72,62 +73,48 @@ class CoinDetailViewModel @Inject constructor(
                     ChartHistoryRange.ONE_WEEK -> getCoinGraphDataDaily(
                         coinName = coinName!!,
                         limit = it.limit,
-                        aggregateId = it.aggregateId
+                        aggregateId = it.aggregateId,
+                        chartHistoryRange = it
                     )
 
                     ChartHistoryRange.ONE_MONTH -> getCoinGraphDataDaily(
                         coinName = coinName!!,
                         limit = it.limit,
-                        aggregateId = it.aggregateId
+                        aggregateId = it.aggregateId,
+                        chartHistoryRange = it
                     )
 
                     ChartHistoryRange.THREE_MONTH -> getCoinGraphDataDaily(
                         coinName = coinName!!,
                         limit = it.limit,
-                        aggregateId = it.aggregateId
+                        aggregateId = it.aggregateId,
+                        chartHistoryRange = it
                     )
 
                     ChartHistoryRange.SIX_MONTH -> getCoinGraphDataDaily(
                         coinName = coinName!!,
                         limit = it.limit,
-                        aggregateId = it.aggregateId
+                        aggregateId = it.aggregateId,
+                        chartHistoryRange = it
                     )
 
-                    ChartHistoryRange.ONE_YEAR -> getCoinGraphDataHourly(
+                    ChartHistoryRange.ONE_YEAR -> getCoinGraphDataDaily(
                         coinName = coinName!!,
                         limit = it.limit,
-                        aggregateId = it.aggregateId
+                        aggregateId = it.aggregateId,
+                        chartHistoryRange = it
                     )
 
-                    ChartHistoryRange.ALL -> getCoinGraphDataHourly(
+                    ChartHistoryRange.ALL -> getCoinGraphDataDaily(
                         coinName = coinName!!,
                         limit = it.limit,
-                        aggregateId = it.aggregateId
+                        aggregateId = it.aggregateId,
+                        chartHistoryRange = it
                     )
                 }
             }
         }
     }
-
-
-}
-
-private fun getMonth(epochTimeMillis: Long): String {
-    val localDateTime =
-        Instant.ofEpochMilli(epochTimeMillis).atZone(ZoneId.systemDefault()).toLocalDateTime()
-
-    val formatter = DateTimeFormatter.ofPattern("MMM")
-
-    return localDateTime.format(formatter)
-}
-
-fun getDay(epochTimeSec: Long): Int {
-    val localDateTime =
-        LocalDateTime.ofInstant(Instant.ofEpochSecond(epochTimeSec), ZoneId.systemDefault())
-
-    val formatter = DateTimeFormatter.ofPattern("dd")
-
-    return localDateTime.format(formatter).toInt()
 }
 
 enum class ChartHistoryRange(val limit: Int, val aggregateId: Int, val rangeName: String) {
