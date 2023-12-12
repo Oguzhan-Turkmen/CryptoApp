@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -24,9 +25,12 @@ fun HomeScreen(
     navController: NavController,
     homeViewModel: HomeViewModel = hiltViewModel(),
 ) {
-    val coinPagingItem = homeViewModel.coinState.collectAsLazyPagingItems()
+    val coinPagingFlow = homeViewModel.coinPagingFlow.collectAsLazyPagingItems()
     val searchText by homeViewModel.searchQuery.collectAsState()
     val sortFilter by homeViewModel.filterState.collectAsState()
+    val baseCurrency = homeViewModel.baseCurrency.collectAsState()
+
+    LaunchedEffect(baseCurrency) { coinPagingFlow.refresh() }
 
     Column(
         modifier = Modifier
@@ -41,20 +45,20 @@ fun HomeScreen(
         FilterDropDownMenu()
         if (searchText.isEmpty() && sortFilter == SortFilter.EMPTY) {
             CoinList(
-                coinUiModelPagingItems = coinPagingItem,
+                coinUiModelPagingItems = coinPagingFlow,
                 onClick = {
                     navController.currentBackStackEntry?.savedStateHandle?.set(
                         key = "coinUiModel",
                         value = it
                     )
-                    navController.navigate(MainScreens.CoinDetailScreen.route+ it.name)
+                    navController.navigate(MainScreens.CoinDetailScreen.route + it.name)
                 }
             )
         } else if (searchText.isNotEmpty()) {
             LazyColumn {
                 items(
                     homeViewModel.getSearchedResult(
-                        coinPagingItem.itemSnapshotList,
+                        coinPagingFlow.itemSnapshotList,
                         sortFilter
                     )
                 ) {
@@ -74,7 +78,7 @@ fun HomeScreen(
             LazyColumn {
                 items(
                     homeViewModel.filterData(
-                        coinPagingItem.itemSnapshotList,
+                        coinPagingFlow.itemSnapshotList,
                         sortFilter
                     )
                 ) {

@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.cryptoapp.R
+import com.example.cryptoapp.domain.model.CoinUiModel
 import com.example.cryptoapp.presentation.coindetail.ChartHistoryRange
 import com.example.cryptoapp.ui.theme.AppColors
 import com.example.cryptoapp.ui.theme.customTypographyBold
@@ -61,14 +62,22 @@ fun CoinDetailBackButton(
 }
 
 @Composable
-fun CoinDetailFavoriteButton(modifier: Modifier = Modifier) {
+fun CoinDetailFavoriteButton(
+    coinUiModel: CoinUiModel,
+    modifier: Modifier = Modifier,
+    onclick: (CoinUiModel) -> Unit,
+    favoriteTint: Boolean,
+) {
     IconButton(
         modifier = modifier,
-        onClick = { /*TODO*/ }
+        onClick = {
+            onclick.invoke(coinUiModel)
+        },
     ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_detail_favorite),
             contentDescription = "Detail Favorite",
+            tint = if (favoriteTint) AppColors.SelectedBlue else Color.Black
         )
     }
 }

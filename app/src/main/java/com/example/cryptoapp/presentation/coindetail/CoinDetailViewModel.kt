@@ -4,10 +4,16 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cryptoapp.domain.model.CoinGraphModel
+import com.example.cryptoapp.domain.model.CoinUiModel
+import com.example.cryptoapp.domain.usecase.DeleteCoinDbUseCase
 import com.example.cryptoapp.domain.usecase.GetCoinGraphDataDailyUseCase
 import com.example.cryptoapp.domain.usecase.GetCoinGraphDataHourlyUseCase
+import com.example.cryptoapp.domain.usecase.GetSavedCoinsDbUseCase
+import com.example.cryptoapp.domain.usecase.SaveCoinDbUseCase
 import com.example.cryptoapp.util.Const.PARAM_COIN_NAME
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -18,6 +24,9 @@ import javax.inject.Inject
 class CoinDetailViewModel @Inject constructor(
     private val getCoinGraphDataDailyUseCase: GetCoinGraphDataDailyUseCase,
     private val getCoinGraphDataHourlyUseCase: GetCoinGraphDataHourlyUseCase,
+    private val savedCoinDbUseCase: SaveCoinDbUseCase,
+    private val deleteCoinDbUseCase: DeleteCoinDbUseCase,
+    private val getSavedCoinsDbUseCase: GetSavedCoinsDbUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val coinName = savedStateHandle.get<String>(PARAM_COIN_NAME)
@@ -27,6 +36,9 @@ class CoinDetailViewModel @Inject constructor(
 
     private val _preferredRange = MutableStateFlow(ChartHistoryRange.ONE_DAY)
     val preferredRange = _preferredRange.asStateFlow()
+
+    private val _isCoinSaved = MutableStateFlow(false)
+    val isCoinSaved = _isCoinSaved.asStateFlow()
 
     private fun getCoinGraphDataHourly(coinName: String, limit: Int, aggregateId: Int) {
         viewModelScope.launch {
@@ -53,6 +65,31 @@ class CoinDetailViewModel @Inject constructor(
                     chartHistoryRange = chartHistoryRange,
                     aggregateId = aggregateId
                 )
+        }
+    }
+
+    private suspend fun saveCoinDb(coinUiModel: CoinUiModel) {
+        _isCoinSaved.value = true
+        savedCoinDbUseCase.execute(coinUiModel)
+    }
+
+    private suspend fun deleteCoinDb(coinUiModel: CoinUiModel) {
+        _isCoinSaved.value = false
+        deleteCoinDbUseCase.execute(coinUiModel)
+    }
+
+    fun handleCoinSaveProcess(coinName: CoinUiModel) {
+        viewModelScope.launch {
+            if (_isCoinSaved.value) deleteCoinDb(coinName) else saveCoinDb (coinName)
+        }
+    }
+
+    fun checkIsCoinSaved(coinName: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val savedCoinList = getSavedCoinsDbUseCase.execute()
+            savedCoinList.forEach {
+                if (coinName == it.name) _isCoinSaved.value = true
+            }
         }
     }
 

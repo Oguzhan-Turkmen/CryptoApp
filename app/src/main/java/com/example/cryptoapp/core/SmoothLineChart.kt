@@ -1,5 +1,4 @@
 import android.graphics.PointF
-import android.util.Log
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -82,7 +81,6 @@ fun SmoothLineGraph(data: List<CoinGraphModel>, range: ChartHistoryRange) {
 
         LaunchedEffect(key1 = data, block = {
             animationProgress.animateTo(1f, tween(3000))
-            Log.e("CHARTDATA", data.toString())
         })
 
         val coroutineScope = rememberCoroutineScope()
@@ -150,8 +148,8 @@ fun SmoothLineGraph(data: List<CoinGraphModel>, range: ChartHistoryRange) {
                             val rangedData = range.getRangedData(data)
 
                             repeat(range.xSteps) { i ->
-                                val startX = (graphSize.width / range.xSteps) * (i)
-                                Log.e("index", i.toString())
+                                val startX = (graphSize.width / range.xSteps) * i
+
                                 drawLine(
                                     AppColors.Gray2,
                                     start = Offset(startX, 0f),
@@ -184,11 +182,13 @@ fun SmoothLineGraph(data: List<CoinGraphModel>, range: ChartHistoryRange) {
                         )
 
                         if (data.size >= range.limit) {
-                            val sortedData = data.sortedByDescending { it.close }
+                            val maxYValue = data.maxBy { it.close }.close
+                            val minYValue = data.minBy { it.close }.close
+                            val yValueGap = (maxYValue - minYValue) / range.xSteps
 
                             repeat(range.xSteps) { i ->
+                                val yValue = maxYValue - (yValueGap * i)
                                 val startY = (graphSize.height / range.xSteps) * i
-                                val itemIndex = (sortedData.size * i) / range.xSteps
 
                                 drawLine(
                                     AppColors.Gray2,
@@ -197,12 +197,13 @@ fun SmoothLineGraph(data: List<CoinGraphModel>, range: ChartHistoryRange) {
                                     strokeWidth = barWidthPx
                                 )
 
+                                val textHeight = textMeasurer.measure(yValue.toString()).size.height
                                 drawText(
                                     textMeasurer = textMeasurer,
-                                    text = sortedData[itemIndex].close.toString(),
-                                    topLeft = Offset(graphSize.width, startY),
+                                    text = yValue.toString(),
+                                    topLeft = Offset(graphSize.width, startY - textHeight / 2),
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Visible
                                 )
                             }
                         }
@@ -222,7 +223,6 @@ fun SmoothLineGraph(data: List<CoinGraphModel>, range: ChartHistoryRange) {
                             )
                         }
 
-                        // draw highlight if user is dragging
                         if (highlightedWeek != null) {
                             drawHighlight(
                                 highlightedWeek!!,
@@ -261,6 +261,22 @@ private fun ChartHistoryRange.getRangedData(data: List<CoinGraphModel>): List<Co
         ChartHistoryRange.ALL -> data.slice(0..limit step 365)
     }
 }
+
+/*private fun ChartHistoryRange.getRangedDataCustom(data: List<CoinGraphModel>): List<CoinGraphModel> {
+    return when (this) {
+        ChartHistoryRange.ONE_DAY -> data.slice(0..limit step 6)
+        ChartHistoryRange.ONE_WEEK -> data
+        ChartHistoryRange.ONE_MONTH -> {
+            val dayOfFirstIndex =  LocalDateTime.ofInstant(Instant.ofEpochSecond(data.first().time), ZoneId.systemDefault()).minusMonths(1L)
+        }
+        ChartHistoryRange.THREE_MONTH -> {
+
+        }
+        ChartHistoryRange.SIX_MONTH -> data.slice(0..limit step 30)
+        ChartHistoryRange.ONE_YEAR -> data.slice(0..limit step 60)
+        ChartHistoryRange.ALL -> data.slice(0..limit step 365)
+    }
+}*/
 
 private fun ChartHistoryRange.getEpochMillisLabel(epochTimeMillis: Long): String {
     return when (this) {
@@ -313,7 +329,7 @@ fun generateSmoothPath(data: List<CoinGraphModel>, size: Size): Path {
     val weekWidth = size.width / numberEntries
 
     val max = data.maxBy { it.close }
-    val min = data.minBy { it.close } // will map to x= 0, y = height
+    val min = data.minBy { it.close }
     val range = max.close - min.close
     val heightPxPerAmount = size.height / range.toFloat()
 
@@ -331,7 +347,6 @@ fun generateSmoothPath(data: List<CoinGraphModel>, size: Size): Path {
         val balanceX = i * weekWidth
         val balanceY = size.height - (balance.close - min.close).toFloat() *
                 heightPxPerAmount
-        // to do smooth curve graph - we use cubicTo, uncomment section below for non-curve
         val controlPoint1 = PointF((balanceX + previousBalanceX) / 2f, previousBalanceY)
         val controlPoint2 = PointF((balanceX + previousBalanceX) / 2f, balanceY)
         path.cubicTo(
@@ -358,7 +373,7 @@ fun DrawScope.drawHighlight(
     val range = graphData.maxBy { it.close }.close - minAmount
     val percentageHeight = ((amount - minAmount).toFloat() / range.toFloat())
     val pointY = graphSize.height - (graphSize.height * percentageHeight)
-    // draw vertical line on week
+
     val x = highlightedWeek * (graphSize.width / (graphData.size - 1))
     drawLine(
         HighlightColor,
@@ -368,14 +383,13 @@ fun DrawScope.drawHighlight(
         pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
     )
 
-    // draw hit circle on graph
+
     drawCircle(
         AppColors.SelectedBlue,
         radius = 4.dp.toPx(),
         center = Offset(x, pointY)
     )
 
-    // draw info box
     val textLayoutResult = textMeasurer.measure("$amount", style = labelTextStyle)
     val highlightContainerSize = (textLayoutResult.size).toIntRect().inflate(4.dp.roundToPx()).size
     val boxTopLeft = (x - (highlightContainerSize.width / 2f))

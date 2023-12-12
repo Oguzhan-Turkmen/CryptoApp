@@ -7,7 +7,7 @@ import com.example.cryptoapp.presentation.coindetail.ChartHistoryRange
 import kotlinx.coroutines.flow.Flow
 
 interface CoinRepository {
-    fun getAllCoins(currency: String): Flow<PagingData<CoinUiModel>>
+    fun getAllCoinsPagingFlow(): Flow<PagingData<CoinUiModel>>
     suspend fun getCoinGraphDataHourly(
         currency: String,
         coinName: String,

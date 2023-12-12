@@ -37,10 +37,16 @@ fun CoinDetailScreen(
     coinDetailViewModel: CoinDetailViewModel = hiltViewModel(),
     coinUiModel: CoinUiModel
 ) {
+
     val preferredRange by coinDetailViewModel.preferredRange.collectAsState()
+
+    val isCoinSaved by coinDetailViewModel.isCoinSaved.collectAsState()
 
     LaunchedEffect(Unit) {
         coinDetailViewModel.fetchRequestedRangeData()
+    }
+    LaunchedEffect(isCoinSaved) {
+        coinDetailViewModel.checkIsCoinSaved(coinName = coinUiModel.name)
     }
 
     val chartData by coinDetailViewModel.coinGraphData.collectAsState()
@@ -50,7 +56,9 @@ fun CoinDetailScreen(
         coinUiModel = coinUiModel,
         preferredRange = preferredRange,
         chartData = chartData,
-        onClick = coinDetailViewModel::onDateRangeClick
+        onClick = coinDetailViewModel::onDateRangeClick,
+        favoriteClick = coinDetailViewModel::handleCoinSaveProcess,
+        favoriteTint = isCoinSaved
     )
 }
 
@@ -61,13 +69,20 @@ fun CoinDetail(
     preferredRange: ChartHistoryRange,
     chartData: List<CoinGraphModel>,
     onClick: (ChartHistoryRange) -> Unit,
+    favoriteClick: (CoinUiModel) -> Unit,
+    favoriteTint: Boolean,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        CoinHeader(navController = navController, coinUiModel = coinUiModel)
+        CoinHeader(
+            navController = navController,
+            coinUiModel = coinUiModel,
+            onClick = favoriteClick,
+            favoriteTint = favoriteTint
+        )
         CoinDetailChartDataRangeRow(
             modifier = Modifier,
             preferredRange = preferredRange,
@@ -97,7 +112,9 @@ fun CoinChart(
 @Composable
 fun CoinHeader(
     navController: NavController,
-    coinUiModel: CoinUiModel
+    coinUiModel: CoinUiModel,
+    onClick: (CoinUiModel) -> Unit,
+    favoriteTint: Boolean
 ) {
     Column {
         Row(
@@ -111,7 +128,11 @@ fun CoinHeader(
                 navController.popBackStack()
             })
             CoinDetailName(coinName = coinUiModel.fullName)
-            CoinDetailFavoriteButton()
+            CoinDetailFavoriteButton(
+                onclick = onClick,
+                coinUiModel = coinUiModel,
+                favoriteTint = favoriteTint
+            )
         }
         Column(
             modifier = Modifier

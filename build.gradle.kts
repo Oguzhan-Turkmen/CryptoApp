@@ -11,6 +11,7 @@ buildscript {
         set("okhttp_version", "3.6.0")
         set("paging_version", "3.1.1")
         set("nav_version", "2.5.2")
+        set("room_version", "2.5.0")
     }
 }
 // Top-level build file where you can add configuration options common to all sub-projects/modules.

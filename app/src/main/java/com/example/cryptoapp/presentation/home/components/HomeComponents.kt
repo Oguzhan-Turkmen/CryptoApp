@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.example.cryptoapp.R
@@ -491,7 +490,7 @@ fun LoadingNextPageItem(modifier: Modifier) {
 @Preview
 @Composable
 fun filterWidgetPrev() {
-    FilterWidget()
+    //FilterWidget()
 }
 
 @Preview

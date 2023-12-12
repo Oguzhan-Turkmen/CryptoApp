@@ -1,31 +1,33 @@
 package com.example.cryptoapp.presentation.settings
 
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.cryptoapp.ui.theme.CryptoAppTheme
+import com.example.cryptoapp.presentation.settings.components.InformationText
+import com.example.cryptoapp.presentation.settings.components.SettingScreenTitle
+import com.example.cryptoapp.presentation.settings.components.SettingsDropDownMenu
 
 @Composable
 fun SettingsScreen(
-    navController: NavController
-){
-    Greeting(name = "Oğuz3")
-}
+    navController: NavController,
+    settingsScreenViewModel: SettingsScreenViewModel = hiltViewModel(),
+) {
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    val baseCurrency by settingsScreenViewModel.baseCurrency.collectAsState()
+    val availableBaseCurrencies by settingsScreenViewModel.availableBaseCurrencies.collectAsState()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    CryptoAppTheme {
-        Greeting("Android")
+    Column {
+        SettingScreenTitle()
+        SettingsDropDownMenu(
+            baseCurrency = baseCurrency,
+            onSetCurrency = settingsScreenViewModel::setBaseCurrency,
+            availableBaseCurrencies = availableBaseCurrencies
+        )
+        InformationText()
     }
+
 }
+

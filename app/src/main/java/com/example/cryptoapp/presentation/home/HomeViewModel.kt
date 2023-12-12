@@ -3,9 +3,9 @@ package com.example.cryptoapp.presentation.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.ItemSnapshotList
-import androidx.paging.cachedIn
 import com.example.cryptoapp.domain.model.CoinUiModel
-import com.example.cryptoapp.domain.usecase.GetCoinListUseCase
+import com.example.cryptoapp.domain.repository.SettingsRepository
+import com.example.cryptoapp.domain.usecase.GetCoinPagingFlowUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,15 +15,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    getCoinListUseCase: GetCoinListUseCase
+    getCoinPagingFlowUseCase: GetCoinPagingFlowUseCase,
+    settingsRepository: SettingsRepository,
 ) : ViewModel() {
-
-    val coinState = getCoinListUseCase.execute()
-        .cachedIn(viewModelScope)
+    val coinPagingFlow = getCoinPagingFlowUseCase.execute()
 
     val filterState = MutableStateFlow(SortFilter.EMPTY)
 
-    private val _searchQuery = MutableStateFlow("")
+    val baseCurrency = settingsRepository.getBaseCurrencyFlow()
+
+    private
+    val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
         .stateIn(
             scope = viewModelScope,

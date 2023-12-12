@@ -5,6 +5,7 @@ import androidx.paging.map
 import com.example.cryptoapp.domain.model.CoinGraphModel
 import com.example.cryptoapp.domain.model.CoinUiModel
 import com.example.cryptoapp.domain.repository.CoinRepository
+import com.example.cryptoapp.domain.repository.SettingsRepository
 import com.example.cryptoapp.domain.source.RemoteDataSource
 import com.example.cryptoapp.presentation.coindetail.ChartHistoryRange
 import kotlinx.coroutines.flow.Flow
@@ -13,11 +14,10 @@ import javax.inject.Inject
 
 class CoinRepositoryImpl @Inject constructor(
     private val remoteDataSource: RemoteDataSource,
+    private val settingsRepository: SettingsRepository,
 ) : CoinRepository {
-    override fun getAllCoins(
-        currency: String
-    ): Flow<PagingData<CoinUiModel>> =
-        remoteDataSource.getAllCoins(currency = currency).map { pagingData ->
+    override fun getAllCoinsPagingFlow(): Flow<PagingData<CoinUiModel>> =
+        remoteDataSource.getAllCoins(settingsRepository.getBaseCurrency().name).map { pagingData ->
             pagingData.map {
                 CoinUiModel(
                     id = it.coinInfo.id,
@@ -61,6 +61,4 @@ class CoinRepositoryImpl @Inject constructor(
             aggregateId = aggregateId,
         ).coinData.data.map { CoinGraphModel(time = it.time, close = it.close) }
     }
-
-
 }

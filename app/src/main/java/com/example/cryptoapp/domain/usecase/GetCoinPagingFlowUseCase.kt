@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.Flow
 
 import javax.inject.Inject
 
-class GetCoinListUseCase @Inject constructor(
+class GetCoinPagingFlowUseCase @Inject constructor(
     private val coinRepository: CoinRepository
 ) {
-    fun execute(currency: String = "USD"): Flow<PagingData<CoinUiModel>> {
-        return coinRepository.getAllCoins(currency)
+    fun execute(): Flow<PagingData<CoinUiModel>> {
+        return coinRepository.getAllCoinsPagingFlow()
     }
 }

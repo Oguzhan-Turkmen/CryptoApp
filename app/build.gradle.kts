@@ -127,8 +127,15 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:$retrofitInterceptorVersion")
 
     //Navigation
-    val navigationVersion = rootProject.extra["nav_version"]
+    val navigatioVersion = rootProject.extra["nav_version"]
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
-    implementation("androidx.navigation:navigation-compose:$navigationVersion")
+    implementation("androidx.navigation:navigation-compose:$navigatioVersion")
+
+    //Room
+    val roomVersion = rootProject.extra["room_version"]
+    implementation("androidx.room:room-runtime:$roomVersion")
+    annotationProcessor("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
 
 }
