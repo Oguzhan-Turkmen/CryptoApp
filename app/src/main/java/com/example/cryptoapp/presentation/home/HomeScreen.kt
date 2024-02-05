@@ -28,7 +28,7 @@ fun HomeScreen(
     val coinPagingFlow = homeViewModel.coinPagingFlow.collectAsLazyPagingItems()
     val searchText by homeViewModel.searchQuery.collectAsState()
     val sortFilter by homeViewModel.filterState.collectAsState()
-    val baseCurrency = homeViewModel.baseCurrency.collectAsState()
+    val baseCurrency by homeViewModel.baseCurrency.collectAsState()
 
     LaunchedEffect(baseCurrency) { coinPagingFlow.refresh() }
 

@@ -3,14 +3,19 @@ package com.example.cryptoapp.presentation.coindetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cryptoapp.data.websocket.Difference
+import com.example.cryptoapp.data.websocket.Price
+import com.example.cryptoapp.data.websocket.SocketManager
 import com.example.cryptoapp.domain.model.CoinGraphModel
 import com.example.cryptoapp.domain.model.CoinUiModel
+import com.example.cryptoapp.domain.repository.SettingsRepository
 import com.example.cryptoapp.domain.usecase.DeleteCoinDbUseCase
 import com.example.cryptoapp.domain.usecase.GetCoinGraphDataDailyUseCase
 import com.example.cryptoapp.domain.usecase.GetCoinGraphDataHourlyUseCase
 import com.example.cryptoapp.domain.usecase.GetSavedCoinsDbUseCase
 import com.example.cryptoapp.domain.usecase.SaveCoinDbUseCase
 import com.example.cryptoapp.util.Const.PARAM_COIN_NAME
+import com.example.cryptoapp.util.Const.PARAM_WS_COIN_PREFIX
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,12 +29,28 @@ import javax.inject.Inject
 class CoinDetailViewModel @Inject constructor(
     private val getCoinGraphDataDailyUseCase: GetCoinGraphDataDailyUseCase,
     private val getCoinGraphDataHourlyUseCase: GetCoinGraphDataHourlyUseCase,
-    private val savedCoinDbUseCase: SaveCoinDbUseCase,
+    private val saveCoinDbUseCase: SaveCoinDbUseCase,
     private val deleteCoinDbUseCase: DeleteCoinDbUseCase,
     private val getSavedCoinsDbUseCase: GetSavedCoinsDbUseCase,
-    savedStateHandle: SavedStateHandle
-) : ViewModel() {
+    private val socketManager: SocketManager,
+    savedStateHandle: SavedStateHandle,
+    settingsRepository: SettingsRepository,
+    ) : ViewModel() {
     private val coinName = savedStateHandle.get<String>(PARAM_COIN_NAME)
+
+    val baseCurrency = settingsRepository.getBaseCurrencyFlow()
+
+    private val wsCoinName =
+        PARAM_WS_COIN_PREFIX + coinName?.uppercase() + "~" + baseCurrency.value.name
+
+    private val _wsData = MutableStateFlow(
+        Price(
+            value = 0.0,
+            exchange = Difference.UP,
+            exchangeValue = 0.0
+        )
+    )
+    val wsData = _wsData.asStateFlow()
 
     private val _coinGraphData = MutableStateFlow<List<CoinGraphModel>>(emptyList())
     val coinGraphData = _coinGraphData.asStateFlow()
@@ -39,6 +60,18 @@ class CoinDetailViewModel @Inject constructor(
 
     private val _isCoinSaved = MutableStateFlow(false)
     val isCoinSaved = _isCoinSaved.asStateFlow()
+
+    init {
+        handleWs(wsCoinName)
+    }
+
+    fun handleWs(coinName: String) {
+        viewModelScope.launch {
+            socketManager.handleWs(coinName).collectLatest {
+                _wsData.value = it
+            }
+        }
+    }
 
     private fun getCoinGraphDataHourly(coinName: String, limit: Int, aggregateId: Int) {
         viewModelScope.launch {
@@ -70,7 +103,7 @@ class CoinDetailViewModel @Inject constructor(
 
     private suspend fun saveCoinDb(coinUiModel: CoinUiModel) {
         _isCoinSaved.value = true
-        savedCoinDbUseCase.execute(coinUiModel)
+        saveCoinDbUseCase.execute(coinUiModel)
     }
 
     private suspend fun deleteCoinDb(coinUiModel: CoinUiModel) {
@@ -80,7 +113,7 @@ class CoinDetailViewModel @Inject constructor(
 
     fun handleCoinSaveProcess(coinName: CoinUiModel) {
         viewModelScope.launch {
-            if (_isCoinSaved.value) deleteCoinDb(coinName) else saveCoinDb (coinName)
+            if (_isCoinSaved.value) deleteCoinDb(coinName) else saveCoinDb(coinName)
         }
     }
 

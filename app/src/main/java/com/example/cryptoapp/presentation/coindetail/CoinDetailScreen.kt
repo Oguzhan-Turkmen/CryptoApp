@@ -19,8 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.cryptoapp.core.CircleImage
+import com.example.cryptoapp.data.websocket.Price
 import com.example.cryptoapp.domain.model.CoinGraphModel
 import com.example.cryptoapp.domain.model.CoinUiModel
 import com.example.cryptoapp.presentation.coindetail.coindetailcomponent.CoinDetailBackButton
@@ -37,10 +39,15 @@ fun CoinDetailScreen(
     coinDetailViewModel: CoinDetailViewModel = hiltViewModel(),
     coinUiModel: CoinUiModel
 ) {
-
     val preferredRange by coinDetailViewModel.preferredRange.collectAsState()
 
     val isCoinSaved by coinDetailViewModel.isCoinSaved.collectAsState()
+
+    val chartData by coinDetailViewModel.coinGraphData.collectAsStateWithLifecycle()
+
+    val socketState by coinDetailViewModel.wsData.collectAsStateWithLifecycle()
+
+    val baseCurrency by coinDetailViewModel.baseCurrency.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         coinDetailViewModel.fetchRequestedRangeData()
@@ -49,8 +56,6 @@ fun CoinDetailScreen(
         coinDetailViewModel.checkIsCoinSaved(coinName = coinUiModel.name)
     }
 
-    val chartData by coinDetailViewModel.coinGraphData.collectAsState()
-
     CoinDetail(
         navController = navController,
         coinUiModel = coinUiModel,
@@ -58,7 +63,9 @@ fun CoinDetailScreen(
         chartData = chartData,
         onClick = coinDetailViewModel::onDateRangeClick,
         favoriteClick = coinDetailViewModel::handleCoinSaveProcess,
-        favoriteTint = isCoinSaved
+        favoriteTint = isCoinSaved,
+        socketState = socketState,
+        baseCurrency = baseCurrency.symbol
     )
 }
 
@@ -71,6 +78,8 @@ fun CoinDetail(
     onClick: (ChartHistoryRange) -> Unit,
     favoriteClick: (CoinUiModel) -> Unit,
     favoriteTint: Boolean,
+    socketState: Price,
+    baseCurrency: String
 ) {
     Column(
         modifier = Modifier
@@ -81,7 +90,9 @@ fun CoinDetail(
             navController = navController,
             coinUiModel = coinUiModel,
             onClick = favoriteClick,
-            favoriteTint = favoriteTint
+            favoriteTint = favoriteTint,
+            price = socketState,
+            baseCurrency = baseCurrency
         )
         CoinDetailChartDataRangeRow(
             modifier = Modifier,
@@ -114,7 +125,9 @@ fun CoinHeader(
     navController: NavController,
     coinUiModel: CoinUiModel,
     onClick: (CoinUiModel) -> Unit,
-    favoriteTint: Boolean
+    favoriteTint: Boolean,
+    price: Price,
+    baseCurrency: String,
 ) {
     Column {
         Row(
@@ -144,27 +157,9 @@ fun CoinHeader(
                 width = 80,
                 height = 80
             )
-            CoinDetailPrice(price = coinUiModel.priceWithSymbol)
+            CoinDetailPrice(price = price, baseCurrency = baseCurrency)
             Spacer(modifier = Modifier.height(8.dp))
-            CoinDetailChangePct(changePctDay = coinUiModel.changePctDay)
+            CoinDetailChangePct(price = price)
         }
     }
 }
-
-@Preview
-@Composable
-fun CoinDetailScreenPrev() {
-    //CoinDetailScreen(coinUiModel = coinUiModelPrev)
-}
-
-private val coinUiModelPrev = CoinUiModel(
-    id = "5",
-    name = "BTC",
-    fullName = "Bitcoin",
-    imageUrl = "https://www.cryptocompare.com/media/37747199/shib.png",
-    priceWithSymbol = "\$29,4",
-    price = 29.3,
-    changePctDay = -2.069999999999993,
-    changeDay = -0.0006964497035043538,
-    toSymbol = "\$"
-)

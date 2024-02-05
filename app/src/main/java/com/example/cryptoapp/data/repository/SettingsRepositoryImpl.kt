@@ -8,20 +8,27 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 private const val PREFS_SETTING = "settingsPreferences"
 private const val KEY_BASE_CURRENCY = "keyBaseCurrency"
 
-class SettingsRepositoryImpl @Inject constructor(@ApplicationContext context: Context) : SettingsRepository {
+class SettingsRepositoryImpl @Inject constructor(
+    @ApplicationContext context: Context,
+    private val json: Json,
+) : SettingsRepository {
     private val preferences = context.getSharedPreferences(PREFS_SETTING, Context.MODE_PRIVATE)
+
+    private val baseCurrencyJson =
+        json.decodeFromString<BaseCurrency>(preferences.getString(KEY_BASE_CURRENCY, "")!!)
 
     private val _baseCurrency: MutableStateFlow<BaseCurrency> = MutableStateFlow(
         BaseCurrency(
-            name = preferences.getString(
-                KEY_BASE_CURRENCY,
-                BaseCurrency.getDefault().name
-            ) ?: BaseCurrency.getDefault().name
+            name = baseCurrencyJson.name,
+            symbol = baseCurrencyJson.symbol
         )
     )
 
@@ -31,8 +38,9 @@ class SettingsRepositoryImpl @Inject constructor(@ApplicationContext context: Co
 
     @SuppressLint("ApplySharedPref")
     override suspend fun setBaseCurrency(currency: BaseCurrency) {
+        val currencyData = BaseCurrency(name = currency.name, symbol = currency.symbol)
         preferences.edit()
-            .putString(KEY_BASE_CURRENCY, currency.name)
+            .putString(KEY_BASE_CURRENCY, json.encodeToString(currencyData))
             .commit().also {
                 if (it) _baseCurrency.value = currency
             }
@@ -43,6 +51,6 @@ class SettingsRepositoryImpl @Inject constructor(@ApplicationContext context: Co
     }
 
     override suspend fun getAvailableBaseCurrencies(): List<BaseCurrency> {
-        return listOf(BaseCurrency("usd"), BaseCurrency("eur"))
+        return listOf(BaseCurrency("usd", "$"), BaseCurrency("eur", "€"))
     }
 }

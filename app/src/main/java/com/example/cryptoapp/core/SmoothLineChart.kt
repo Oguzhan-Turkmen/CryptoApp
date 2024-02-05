@@ -262,22 +262,6 @@ private fun ChartHistoryRange.getRangedData(data: List<CoinGraphModel>): List<Co
     }
 }
 
-/*private fun ChartHistoryRange.getRangedDataCustom(data: List<CoinGraphModel>): List<CoinGraphModel> {
-    return when (this) {
-        ChartHistoryRange.ONE_DAY -> data.slice(0..limit step 6)
-        ChartHistoryRange.ONE_WEEK -> data
-        ChartHistoryRange.ONE_MONTH -> {
-            val dayOfFirstIndex =  LocalDateTime.ofInstant(Instant.ofEpochSecond(data.first().time), ZoneId.systemDefault()).minusMonths(1L)
-        }
-        ChartHistoryRange.THREE_MONTH -> {
-
-        }
-        ChartHistoryRange.SIX_MONTH -> data.slice(0..limit step 30)
-        ChartHistoryRange.ONE_YEAR -> data.slice(0..limit step 60)
-        ChartHistoryRange.ALL -> data.slice(0..limit step 365)
-    }
-}*/
-
 private fun ChartHistoryRange.getEpochMillisLabel(epochTimeMillis: Long): String {
     return when (this) {
         ChartHistoryRange.ONE_DAY -> getHour(epochTimeMillis)

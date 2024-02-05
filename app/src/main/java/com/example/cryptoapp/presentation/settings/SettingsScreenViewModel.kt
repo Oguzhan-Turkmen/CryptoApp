@@ -22,7 +22,7 @@ class SettingsScreenViewModel @Inject constructor(
         get() {
             viewModelScope.launch {
                 settingsRepository.getBaseCurrencyFlow()
-                    .map { BaseCurrency(name = it.name.uppercase()) }.collectLatest {
+                    .map { BaseCurrency(name = it.name.uppercase(), symbol = it.symbol) }.collectLatest {
                         _baseCurrency.value = it
                     }
             }
@@ -36,7 +36,7 @@ class SettingsScreenViewModel @Inject constructor(
             viewModelScope.launch {
                 _availableBaseCurrencies.value =
                     settingsRepository.getAvailableBaseCurrencies().map {
-                        BaseCurrency(name = it.name.uppercase())
+                        BaseCurrency(name = it.name.uppercase(), symbol = it.symbol)
                     }
             }
 

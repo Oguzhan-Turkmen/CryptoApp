@@ -5,6 +5,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("kotlin-kapt")
     id("kotlin-parcelize")
+    id("kotlinx-serialization")
 }
 
 android {
@@ -116,14 +117,16 @@ dependencies {
     val lifeCycleVersion = rootProject.extra["lifecycle_version"]
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifeCycleVersion")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifeCycleVersion")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifeCycleVersion")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifeCycleVersion")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
 
     // Retrofit & okhttp
     val retrofitVersion = rootProject.extra["retrofit_version"]
+    val okHttpVersion = rootProject.extra["okhttp_version"]
     val retrofitInterceptorVersion = rootProject.extra["retrofit_interceptor_version"]
     implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
     implementation("com.squareup.retrofit2:converter-gson:$retrofitVersion")
-    implementation("com.squareup.okhttp3:okhttp:$retrofitVersion")
+    implementation("com.squareup.okhttp3:okhttp:$okHttpVersion")
     implementation("com.squareup.okhttp3:logging-interceptor:$retrofitInterceptorVersion")
 
     //Navigation
@@ -137,5 +140,14 @@ dependencies {
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     kapt("androidx.room:room-compiler:$roomVersion")
+
+    //SocketIO
+    implementation("io.socket:socket.io-client:2.1.0")
+    configurations.forEach {
+        it.exclude(group = "org.json", module = "json")
+    }
+
+    //Kotlin Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
 
 }

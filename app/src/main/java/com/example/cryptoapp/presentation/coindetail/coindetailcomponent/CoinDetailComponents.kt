@@ -23,6 +23,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.cryptoapp.R
+import com.example.cryptoapp.data.websocket.Difference
+import com.example.cryptoapp.data.websocket.Price
 import com.example.cryptoapp.domain.model.CoinUiModel
 import com.example.cryptoapp.presentation.coindetail.ChartHistoryRange
 import com.example.cryptoapp.ui.theme.AppColors
@@ -39,10 +41,10 @@ fun CoinDetailName(coinName: String) {
 }
 
 @Composable
-fun CoinDetailPrice(price: String) {
+fun CoinDetailPrice(price: Price, baseCurrency: String) {
     Text(
         modifier = Modifier.padding(top = 8.dp),
-        text = price,
+        text = price.value.toString() + baseCurrency,
         style = MaterialTheme.customTypographyBold.title1,
     )
 }
@@ -84,7 +86,7 @@ fun CoinDetailFavoriteButton(
 
 
 @Composable
-fun CoinDetailChangePct(changePctDay: Double) {
+fun CoinDetailChangePct(price: Price) {
     Box(
         modifier = Modifier
             .width(70.dp)
@@ -93,16 +95,20 @@ fun CoinDetailChangePct(changePctDay: Double) {
             .background(AppColors.LightGray),
         contentAlignment = Alignment.Center
     ) {
-        CoinChangePctText(changePctDay = changePctDay)
+        CoinChangePctText(changePctDay = price)
     }
 }
 
 @Composable
 fun CoinChangePctText(
-    changePctDay: Double,
+    changePctDay: Price,
 ) {
-    val changePctDayText = changePctDay.withDecimalDigits(2).toString() + "%"
-    val textColor = if (changePctDay < 0) AppColors.Red else AppColors.Green
+    val changePctDayText =changePctDay.exchangeValue.withDecimalDigits(2).toString()
+    val textColor = when(changePctDay.exchange){
+        Difference.UP ->  AppColors.Green
+        Difference.Down -> AppColors.Red
+        Difference.Stable -> AppColors.Blue
+    }
     Text(
         text = changePctDayText,
         style = MaterialTheme.customTypogrphyRegular.subheadline,
@@ -166,19 +172,8 @@ fun CoinDetailChartDataRangeRowPrev() {
 
 @Preview
 @Composable
-fun CoinDetailChangePctPrev() {
-    CoinDetailChangePct(-2.069999999999993)
-}
-
-@Preview
-@Composable
 fun CoinDetailNamePrev() {
     CoinDetailName(coinName = "Bitcoin")
 }
 
-@Preview
-@Composable
-fun CoinDetailPricePrev() {
-    CoinDetailPrice(price = "$29,467.560")
-}
 
