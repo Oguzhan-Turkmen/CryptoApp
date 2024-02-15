@@ -1,4 +1,4 @@
-package com.example.cryptoapp.util
+package com.example.cryptoapp.core.util
 
 import java.math.RoundingMode
 import java.text.DecimalFormat

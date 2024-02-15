@@ -1,5 +1,6 @@
 package com.example.cryptoapp.presentation.coindetail
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,15 +8,17 @@ import com.example.cryptoapp.data.websocket.Difference
 import com.example.cryptoapp.data.websocket.Price
 import com.example.cryptoapp.data.websocket.SocketManager
 import com.example.cryptoapp.domain.model.CoinGraphModel
+import com.example.cryptoapp.domain.model.CoinNewUiModel
 import com.example.cryptoapp.domain.model.CoinUiModel
 import com.example.cryptoapp.domain.repository.SettingsRepository
 import com.example.cryptoapp.domain.usecase.DeleteCoinDbUseCase
 import com.example.cryptoapp.domain.usecase.GetCoinGraphDataDailyUseCase
 import com.example.cryptoapp.domain.usecase.GetCoinGraphDataHourlyUseCase
+import com.example.cryptoapp.domain.usecase.GetCoinNewsUseCase
 import com.example.cryptoapp.domain.usecase.GetSavedCoinsDbUseCase
 import com.example.cryptoapp.domain.usecase.SaveCoinDbUseCase
-import com.example.cryptoapp.util.Const.PARAM_COIN_NAME
-import com.example.cryptoapp.util.Const.PARAM_WS_COIN_PREFIX
+import com.example.cryptoapp.core.util.Const.PARAM_COIN_NAME
+import com.example.cryptoapp.core.util.Const.PARAM_WS_COIN_PREFIX
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,10 +35,12 @@ class CoinDetailViewModel @Inject constructor(
     private val saveCoinDbUseCase: SaveCoinDbUseCase,
     private val deleteCoinDbUseCase: DeleteCoinDbUseCase,
     private val getSavedCoinsDbUseCase: GetSavedCoinsDbUseCase,
+    private val getCoinNewsUseCase: GetCoinNewsUseCase,
     private val socketManager: SocketManager,
     savedStateHandle: SavedStateHandle,
     settingsRepository: SettingsRepository,
-    ) : ViewModel() {
+) : ViewModel() {
+
     private val coinName = savedStateHandle.get<String>(PARAM_COIN_NAME)
 
     val baseCurrency = settingsRepository.getBaseCurrencyFlow()
@@ -46,7 +51,7 @@ class CoinDetailViewModel @Inject constructor(
     private val _wsData = MutableStateFlow(
         Price(
             value = 0.0,
-            exchange = Difference.UP,
+            exchange = Difference.Stable,
             exchangeValue = 0.0
         )
     )
@@ -54,6 +59,9 @@ class CoinDetailViewModel @Inject constructor(
 
     private val _coinGraphData = MutableStateFlow<List<CoinGraphModel>>(emptyList())
     val coinGraphData = _coinGraphData.asStateFlow()
+
+    private val _coinNewsData = MutableStateFlow<List<CoinNewUiModel>>(emptyList())
+    val coinNewsData = _coinNewsData.asStateFlow()
 
     private val _preferredRange = MutableStateFlow(ChartHistoryRange.ONE_DAY)
     val preferredRange = _preferredRange.asStateFlow()
@@ -63,9 +71,10 @@ class CoinDetailViewModel @Inject constructor(
 
     init {
         handleWs(wsCoinName)
+        getCoinNews(coinName!!)
     }
 
-    fun handleWs(coinName: String) {
+    private fun handleWs(coinName: String) {
         viewModelScope.launch {
             socketManager.handleWs(coinName).collectLatest {
                 _wsData.value = it
@@ -80,6 +89,15 @@ class CoinDetailViewModel @Inject constructor(
                     coinName = coinName,
                     limit = limit,
                     aggregateId = aggregateId
+                )
+        }
+    }
+
+    private fun getCoinNews(coinName: String) {
+        viewModelScope.launch {
+            _coinNewsData.value =
+                getCoinNewsUseCase.execute(
+                    coinName = coinName,
                 )
         }
     }

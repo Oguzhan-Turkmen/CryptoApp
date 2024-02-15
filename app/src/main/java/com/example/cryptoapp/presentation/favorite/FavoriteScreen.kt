@@ -17,7 +17,7 @@ import com.example.cryptoapp.presentation.favorite.components.FavoriteScreenTitl
 import com.example.cryptoapp.presentation.home.components.CoinItem
 import com.example.cryptoapp.presentation.home.components.SearchBarWidget
 import com.example.cryptoapp.presentation.navigation.MainScreens
-import com.example.cryptoapp.ui.theme.CryptoAppTheme
+import com.example.cryptoapp.presentation.ui.theme.CryptoAppTheme
 
 @Composable
 fun FavoriteScreen(

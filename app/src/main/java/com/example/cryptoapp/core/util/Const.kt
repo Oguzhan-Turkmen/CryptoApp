@@ -1,4 +1,4 @@
-package com.example.cryptoapp.util
+package com.example.cryptoapp.core.util
 
 object Const {
     const val CRYPTO_API_URL = "https://min-api.cryptocompare.com/data/"

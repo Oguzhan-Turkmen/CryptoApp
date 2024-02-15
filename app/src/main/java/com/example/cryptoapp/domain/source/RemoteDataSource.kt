@@ -2,6 +2,7 @@ package com.example.cryptoapp.domain.source
 
 import androidx.paging.PagingData
 import com.example.cryptoapp.data.dto.coin.CoinResponse
+import com.example.cryptoapp.data.dto.coinNews.CoinNewsResponse
 import com.example.cryptoapp.data.dto.coingraph.CoinGraphResponse
 import kotlinx.coroutines.flow.Flow
 
@@ -11,15 +12,16 @@ interface RemoteDataSource {
     suspend fun getCoinGraphDataHourly(
         currency: String,
         coinName: String,
-        limit:Int,
+        limit: Int,
         aggregateId: Int
     ): CoinGraphResponse
 
     suspend fun getCoinGraphDataDaily(
         currency: String,
         coinName: String,
-        limit:Int,
+        limit: Int,
         aggregateId: Int
     ): CoinGraphResponse
 
+    suspend fun getCoinNews(coinName: String):CoinNewsResponse
 }

@@ -25,9 +25,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.cryptoapp.domain.repository.BaseCurrency
-import com.example.cryptoapp.ui.theme.AppColors
-import com.example.cryptoapp.ui.theme.customTypographyBold
-import com.example.cryptoapp.ui.theme.customTypogrphyRegular
+import com.example.cryptoapp.presentation.ui.theme.AppColors
+import com.example.cryptoapp.presentation.ui.theme.customTypographyBold
+import com.example.cryptoapp.presentation.ui.theme.customTypogrphyRegular
 
 @Composable
 fun SettingScreenTitle() {

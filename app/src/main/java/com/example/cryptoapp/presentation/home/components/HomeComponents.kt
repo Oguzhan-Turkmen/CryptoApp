@@ -62,11 +62,11 @@ import com.example.cryptoapp.R
 import com.example.cryptoapp.core.CircleImage
 import com.example.cryptoapp.domain.model.CoinUiModel
 import com.example.cryptoapp.presentation.home.HomeViewModel
-import com.example.cryptoapp.ui.theme.AppColors
-import com.example.cryptoapp.ui.theme.customTypographyBold
-import com.example.cryptoapp.ui.theme.customTypogrphyRegular
-import com.example.cryptoapp.util.Const.CRYPTO_API_IMAGE_URL
-import com.example.cryptoapp.util.withDecimalDigits
+import com.example.cryptoapp.presentation.ui.theme.AppColors
+import com.example.cryptoapp.presentation.ui.theme.customTypographyBold
+import com.example.cryptoapp.presentation.ui.theme.customTypogrphyRegular
+import com.example.cryptoapp.core.util.Const.CRYPTO_API_IMAGE_URL
+import com.example.cryptoapp.core.util.withDecimalDigits
 
 @Composable
 fun CoinList(
@@ -286,33 +286,6 @@ fun SearchBarWidget(
     }
 }
 
-@Composable
-fun FilterWidget(
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                start = 16.dp,
-                end = 16.dp,
-                top = 4.dp,
-                bottom = 4.dp
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = "Most Popular",
-            style = MaterialTheme.customTypographyBold.subheadline,
-            color = AppColors.Gray,
-        )
-
-        Icon(
-            painter = painterResource(id = R.drawable.ic_filter),
-            contentDescription = "Filter Icon",
-        )
-    }
-}
-
 
 @Composable
 fun FilterDropDownMenu(
@@ -485,12 +458,6 @@ fun LoadingNextPageItem(modifier: Modifier) {
             .padding(10.dp)
             .wrapContentWidth(Alignment.CenterHorizontally)
     )
-}
-
-@Preview
-@Composable
-fun filterWidgetPrev() {
-    //FilterWidget()
 }
 
 @Preview

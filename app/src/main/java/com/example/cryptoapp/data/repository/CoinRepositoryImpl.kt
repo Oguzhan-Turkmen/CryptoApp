@@ -3,6 +3,7 @@ package com.example.cryptoapp.data.repository
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.example.cryptoapp.domain.model.CoinGraphModel
+import com.example.cryptoapp.domain.model.CoinNewUiModel
 import com.example.cryptoapp.domain.model.CoinUiModel
 import com.example.cryptoapp.domain.repository.CoinRepository
 import com.example.cryptoapp.domain.repository.SettingsRepository
@@ -60,5 +61,15 @@ class CoinRepositoryImpl @Inject constructor(
             limit = limit,
             aggregateId = aggregateId,
         ).coinData.data.map { CoinGraphModel(time = it.time, close = it.close) }
+    }
+
+    override suspend fun getCoinNews(coinName: String): List<CoinNewUiModel> {
+        return remoteDataSource.getCoinNews(coinName = coinName).coinNew.map {
+            CoinNewUiModel(
+                title = it.title,
+                imageUrl = it.imageUrl,
+                sourceUrl = it.url
+            )
+        }
     }
 }

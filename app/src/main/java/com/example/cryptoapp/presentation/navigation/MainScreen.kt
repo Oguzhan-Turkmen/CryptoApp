@@ -1,5 +1,6 @@
 package com.example.cryptoapp.presentation.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
@@ -25,21 +26,34 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.cryptoapp.ui.theme.AppColors
+import com.example.cryptoapp.presentation.ui.theme.AppColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
-    var showBottomBar by rememberSaveable { mutableStateOf(true) }
+    var showBottomBar by rememberSaveable { mutableStateOf(false) }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+
     Scaffold(
         bottomBar =
-        { if (showBottomBar) BottomBar(navController = navController) },
+        {
+            Log.e("navBackStack",navBackStackEntry?.destination?.route.toString())
+            showBottomBar = when (navBackStackEntry?.destination?.route) {
+                "coin_news_webView_screen{coinNewUrl}" -> false
+                "coin_detail_screen{coinName}" -> false
+                "coin_news_screen{coinName}" -> false
+                else -> true
+            }
+            if (showBottomBar) BottomBar(navController = navController)
+            Log.e("BottomBar", showBottomBar.toString())
+        },
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .padding(PaddingValues(0.dp, 0.dp, 0.dp, innerPadding.calculateBottomPadding()))
         ) {
+
             MainNavigation(navController)
         }
     }
@@ -74,8 +88,7 @@ fun RowScope.AddItem(
 ) {
     val selected = currentDestination?.hierarchy?.any {
         it.route == screen.route
-    } ?: false
-
+    } == true
     NavigationBarItem(
         icon = {
             Icon(

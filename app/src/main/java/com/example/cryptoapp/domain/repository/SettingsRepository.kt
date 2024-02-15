@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
 interface SettingsRepository {
-
     fun getBaseCurrencyFlow(): StateFlow<BaseCurrency>
 
     suspend fun setBaseCurrency(currency: BaseCurrency)

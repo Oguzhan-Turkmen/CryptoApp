@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.toIntRect
 import androidx.compose.ui.unit.toSize
 import com.example.cryptoapp.domain.model.CoinGraphModel
 import com.example.cryptoapp.presentation.coindetail.ChartHistoryRange
-import com.example.cryptoapp.ui.theme.AppColors
+import com.example.cryptoapp.presentation.ui.theme.AppColors
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime

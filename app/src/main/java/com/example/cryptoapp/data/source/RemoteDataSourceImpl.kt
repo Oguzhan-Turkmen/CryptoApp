@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.example.cryptoapp.data.api.CryptoApi
 import com.example.cryptoapp.data.dto.coin.CoinResponse
+import com.example.cryptoapp.data.dto.coinNews.CoinNewsResponse
 import com.example.cryptoapp.data.dto.coingraph.CoinGraphResponse
 import com.example.cryptoapp.data.repository.CoinsPagingSource
 import com.example.cryptoapp.domain.source.RemoteDataSource
@@ -52,6 +53,10 @@ class RemoteDataSourceImpl @Inject constructor(
             limit = limit,
             aggregateId = aggregateId,
         )
+    }
+
+    override suspend fun getCoinNews(coinName: String): CoinNewsResponse {
+        return cryptoApi.getCoinNews(coinName = coinName)
     }
 
     companion object {

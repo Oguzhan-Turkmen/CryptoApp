@@ -141,11 +141,9 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     kapt("androidx.room:room-compiler:$roomVersion")
 
-    //SocketIO
-    implementation("io.socket:socket.io-client:2.1.0")
-    configurations.forEach {
-        it.exclude(group = "org.json", module = "json")
-    }
+    //Splash Screen
+    val splashVersion = rootProject.extra["splash_version"]
+    implementation("androidx.core:core-splashscreen:$splashVersion")
 
     //Kotlin Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")

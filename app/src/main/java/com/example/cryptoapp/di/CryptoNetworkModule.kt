@@ -2,8 +2,8 @@ package com.example.cryptoapp.di
 
 import com.example.cryptoapp.BuildConfig
 import com.example.cryptoapp.data.api.CryptoApi
-import com.example.cryptoapp.util.Const
-import com.example.cryptoapp.util.Const.CRYPTO_API_URL
+import com.example.cryptoapp.core.util.Const
+import com.example.cryptoapp.core.util.Const.CRYPTO_API_URL
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

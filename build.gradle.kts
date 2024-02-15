@@ -12,6 +12,7 @@ buildscript {
         set("paging_version", "3.1.1")
         set("nav_version", "2.5.2")
         set("room_version", "2.5.0")
+        set("splash_version", "1.0.1")
     }
 }
 // Top-level build file where you can add configuration options common to all sub-projects/modules.

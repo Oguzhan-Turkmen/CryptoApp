@@ -23,7 +23,12 @@ class SettingsRepositoryImpl @Inject constructor(
     private val preferences = context.getSharedPreferences(PREFS_SETTING, Context.MODE_PRIVATE)
 
     private val baseCurrencyJson =
-        json.decodeFromString<BaseCurrency>(preferences.getString(KEY_BASE_CURRENCY, "")!!)
+        json.decodeFromString<BaseCurrency>(
+            preferences.getString(
+                KEY_BASE_CURRENCY,
+                json.encodeToString(BaseCurrency.getDefault())
+            )!!
+        )
 
     private val _baseCurrency: MutableStateFlow<BaseCurrency> = MutableStateFlow(
         BaseCurrency(
